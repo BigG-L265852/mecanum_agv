@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<robot name="mecanum_agv" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Placeholder dimensions (meters) — measure the real chassis and update these,
+       and keep wheel_radius/wheel_separation_x/y in sync with config/robot_params.yaml -->
+  <xacro:property name="chassis_length" value="0.24"/>
+  <xacro:property name="chassis_width" value="0.20"/>
+  <xacro:property name="chassis_height" value="0.08"/>
+  <xacro:property name="wheel_radius" value="0.03"/>
+  <xacro:property name="wheel_width" value="0.03"/>
+  <xacro:property name="wheel_separation_x" value="0.10"/>  <!-- lx: half wheelbase -->
+  <xacro:property name="wheel_separation_y" value="0.10"/>  <!-- ly: half track width -->
+  <xacro:property name="lidar_offset_x" value="0.0"/>
+  <xacro:property name="lidar_offset_z" value="0.10"/>       <!-- height of lidar above base_link -->
+
+  <material name="grey">
+    <color rgba="0.6 0.6 0.6 1"/>
+  </material>
+  <material name="black">
+    <color rgba="0.1 0.1 0.1 1"/>
+  </material>
+
+  <!-- Required TF tree: base_footprint -> base_link -> laser_frame (odom->base_footprint comes
+       from mecanum_drive_node, map->odom comes from slam_toolbox) -->
+  <link name="base_footprint"/>
+
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="${chassis_length} ${chassis_width} ${chassis_height}"/>
+      </geometry>
+      <material name="grey"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="${chassis_length} ${chassis_width} ${chassis_height}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="1.5"/>
+      <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
+    </inertial>
+  </link>
+
+  <joint name="base_footprint_to_base_link" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 ${wheel_radius}" rpy="0 0 0"/>
+  </joint>
+
+  <link name="laser_frame">
+    <visual>
+      <geometry>
+        <cylinder radius="0.03" length="0.04"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+  </link>
+
+  <joint name="base_link_to_laser" type="fixed">
+    <parent link="base_link"/>
+    <child link="laser_frame"/>
+    <origin xyz="${lidar_offset_x} 0 ${lidar_offset_z}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- Wheels are visual-only placeholders (not wired into TF as moving joints); actual
+       odometry is computed from encoder feedback in mecanum_drive_node, not from joint states -->
+  <xacro:macro name="wheel" params="prefix x_reflect y_reflect">
+    <link name="${prefix}_wheel">
+      <visual>
+        <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+        <material name="black"/>
+      </visual>
+    </link>
+    <joint name="${prefix}_wheel_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="${prefix}_wheel"/>
+      <origin xyz="${x_reflect * wheel_separation_x} ${y_reflect * wheel_separation_y} ${-wheel_radius}" rpy="0 0 0"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:wheel prefix="front_left" x_reflect="1" y_reflect="1"/>
+  <xacro:wheel prefix="front_right" x_reflect="1" y_reflect="-1"/>
+  <xacro:wheel prefix="rear_left" x_reflect="-1" y_reflect="1"/>
+  <xacro:wheel prefix="rear_right" x_reflect="-1" y_reflect="-1"/>
+
+</robot>
