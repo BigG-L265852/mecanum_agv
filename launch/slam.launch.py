@@ -63,10 +63,21 @@ def generate_launch_description():
         condition=IfCondition(LaunchConfiguration('open_rviz')),
     )
 
+    # Works around a long-standing, unresolved upstream RViz2 bug (ros2/rviz#1279) where
+    # the Map display's palette shader fails to link on many GPUs. Republishes /map as a
+    # colored PointCloud2, which RViz can render fine.
+    map_to_pointcloud_node = Node(
+        package='mecanum_agv',
+        executable='map_to_pointcloud',
+        name='map_to_pointcloud',
+        output='screen',
+    )
+
     return LaunchDescription([
         open_rviz_arg,
         slam_toolbox_node,
         configure_event,
         activate_event,
         rviz_node,
+        map_to_pointcloud_node,
     ])

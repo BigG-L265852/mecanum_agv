@@ -10,15 +10,27 @@ Visualization Manager:
       Name: Grid
       Enabled: true
       Value: true
-    # Map display disabled: rviz's indexed-8bit-image shader fails to link on this
-    # system's Mesa/Iris Xe driver ("active samplers with a different type refer to
-    # the same texture image unit"). Run `ros2 run mecanum_agv map_to_png` to view /map instead.
+    # Map display disabled: rviz's indexed-8bit-image shader fails to link on a wide
+    # range of GPUs (unresolved upstream bug, ros2/rviz#1279: "active samplers with a
+    # different type refer to the same texture image unit"). The map_to_pointcloud
+    # node (started by slam.launch.py) republishes /map as /map_points instead, shown
+    # below via the PointCloud2 display, which uses a different, working shader path.
     - Class: rviz_default_plugins/Map
       Name: Map
       Topic:
         Value: /map
       Enabled: false
       Value: false
+    - Class: rviz_default_plugins/PointCloud2
+      Name: Map (PointCloud2)
+      Topic:
+        Value: /map_points
+        Durability Policy: Transient Local
+      Style: Flat Squares
+      Size (Pixels): 3
+      Color Transformer: RGB8
+      Enabled: true
+      Value: true
     - Class: rviz_default_plugins/LaserScan
       Name: LaserScan
       Topic:

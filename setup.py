@@ -28,6 +28,7 @@ setup(
         'console_scripts': [
             'mecanum_drive_node = mecanum_agv.mecanum_drive_node:main',
             'map_to_png = mecanum_agv.map_to_png:main',
+            'map_to_pointcloud = mecanum_agv.map_to_pointcloud:main',
         ],
     },
 )
