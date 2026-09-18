@@ -16,11 +16,14 @@ from lifecycle_msgs.msg import Transition
 
 def generate_launch_description():
     pkg_share = get_package_share_directory('mecanum_agv')
-    params_path = os.path.join(pkg_share, 'config', 'mapper_params_online_async.yaml')
+    default_params_path = os.path.join(pkg_share, 'config', 'mapper_params_online_async.yaml')
     rviz_config_path = os.path.join(pkg_share, 'rviz', 'slam.rviz')
 
     open_rviz_arg = DeclareLaunchArgument(
         'open_rviz', default_value='true', description='Launch RViz alongside SLAM')
+    params_arg = DeclareLaunchArgument(
+        'params_file', default_value=default_params_path,
+        description='Full path to the slam_toolbox parameters yaml')
 
     slam_toolbox_node = LifecycleNode(
         package='slam_toolbox',
@@ -28,7 +31,7 @@ def generate_launch_description():
         name='slam_toolbox',
         namespace='',
         output='screen',
-        parameters=[params_path],
+        parameters=[LaunchConfiguration('params_file')],
     )
 
     # async_slam_toolbox_node is a lifecycle node: without a lifecycle manager it stays
@@ -75,6 +78,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         open_rviz_arg,
+        params_arg,
         slam_toolbox_node,
         configure_event,
         activate_event,

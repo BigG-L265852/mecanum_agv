@@ -1,0 +1,53 @@
+amcl:
+  ros__parameters:
+    use_sim_time: false
+
+    # Mecanum wheels can strafe/rotate independently of heading, unlike a
+    # differential-drive base — the differential motion model would badly
+    # under-spread the particle cloud on sideways motion.
+    robot_model_type: "nav2_amcl::OmniMotionModel"
+    alpha1: 0.2
+    alpha2: 0.2
+    alpha3: 0.2
+    alpha4: 0.2
+    alpha5: 0.2
+
+    base_frame_id: "base_footprint"
+    odom_frame_id: "odom"
+    global_frame_id: "map"
+    scan_topic: /scan
+    map_topic: /map
+
+    # Global localization: robot may be placed anywhere on the map at startup.
+    set_initial_pose: false
+    first_map_only: false
+    always_reset_initial_pose: false
+    min_particles: 500
+    max_particles: 3000
+
+    laser_model_type: "likelihood_field"
+    laser_max_range: 12.0
+    laser_min_range: -1.0
+    laser_likelihood_max_dist: 2.0
+    max_beams: 60
+    sigma_hit: 0.2
+    z_hit: 0.5
+    z_max: 0.05
+    z_rand: 0.5
+    z_short: 0.05
+    lambda_short: 0.1
+    do_beam_skip: false
+    beam_skip_distance: 0.5
+    beam_skip_error_threshold: 0.9
+    beam_skip_threshold: 0.3
+
+    update_min_a: 0.2
+    update_min_d: 0.25
+    resample_interval: 1
+    recovery_alpha_fast: 0.0
+    recovery_alpha_slow: 0.0
+    pf_err: 0.05
+    pf_z: 0.99
+    save_pose_rate: 0.5
+    transform_tolerance: 1.0
+    tf_broadcast: true

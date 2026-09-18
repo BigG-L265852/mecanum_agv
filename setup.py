@@ -16,6 +16,7 @@ setup(
         (os.path.join('share', package_name, 'urdf'), glob('urdf/*')),
         (os.path.join('share', package_name, 'config'), glob('config/*')),
         (os.path.join('share', package_name, 'rviz'), glob('rviz/*')),
+        (os.path.join('share', package_name, 'maps'), glob('maps/*.yaml') + glob('maps/*.pgm')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -29,6 +30,7 @@ setup(
             'mecanum_drive_node = mecanum_agv.mecanum_drive_node:main',
             'map_to_png = mecanum_agv.map_to_png:main',
             'map_to_pointcloud = mecanum_agv.map_to_pointcloud:main',
+            'map_viewer = mecanum_agv.map_viewer:main',
         ],
     },
 )
