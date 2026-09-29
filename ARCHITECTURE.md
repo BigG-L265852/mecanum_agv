@@ -136,7 +136,57 @@ Once a map is saved (`nav2_map_server`'s `map_saver_cli`, see `maps/README.md`),
 transitions for both, the same problem §7 solves by hand for slam_toolbox) to
 localize the robot against that fixed map instead of building a new one.
 
-## 9. Known upstream bug: RViz Map display
+## 9. Autonomous navigation (`navigation.launch.py`, Nav2)
+
+Runs on the dev laptop, on top of either `localization.launch.py` (AMCL on a
+saved map, default) or `slam.launch.py` (`slam:=true`, navigate while mapping) —
+both are included, not duplicated. It then starts the Nav2 servers directly
+(same set and remappings as `nav2_bringup`'s `navigation_launch.py`, minus
+docking/route server) plus their own `lifecycle_manager_navigation`.
+Parameters: `config/nav2_params.yaml`, derived from the Jazzy 1.3 defaults.
+
+Holonomic choices — the reason for most deviations from the defaults:
+- **Controller: MPPI with `motion_model: "Omni"`.** It samples `vx`, `vy`
+  *and* `wz`, so the robot strafes along the path instead of turning first.
+  DWB/RPP would either need heavy tuning or ignore `vy` entirely.
+  `PreferForwardCritic` is dropped (no preferred direction on a mecanum base),
+  `TwirlingCritic` added (don't spin while translating), `PathAngleCritic`
+  set to `mode: 1` (no directional preference).
+- **Planner: NavFn (A\*).** Plain 2D grid search without heading constraints,
+  which is all a holonomic base needs. `allow_unknown: true` for `slam:=true`.
+- `min_y_velocity_threshold` and the `velocity_smoother` limits have non-zero
+  `y` entries — in the defaults those are 0 and would silently eat every
+  sideways command.
+- Rectangular `footprint` instead of `robot_radius`, with
+  `CostCritic.consider_footprint: true`.
+
+`cmd_vel` chain:
+```
+controller_server → /cmd_vel_nav → velocity_smoother → /cmd_vel_smoothed
+  → collision_monitor → /cmd_vel → (WiFi) → mecanum_drive_node on the Pi
+```
+The **collision monitor** is an independent last line of defence: it reads
+`/scan` directly (not the costmaps) and slows the robot so the footprint can
+never reach a lidar point within 1.2 s, in whatever direction it moves. The
+drive node's own 0.5 s `cmd_vel` watchdog still stops the wheels if the WiFi
+link drops.
+
+Costmaps are `OccupancyGrid`s too, so they hit the same RViz bug as §10: two
+extra `map_to_pointcloud` instances (`mode: costmap`) republish them as
+`/global_costmap/costmap_points` and `/local_costmap/costmap_points`
+(yellow→red = inflation, cyan = inscribed, magenta = obstacle).
+
+`waypoint_mission` (`nav2_simple_commander`) drives the route in
+`config/waypoints.yaml` through the `waypoint_follower`, once or in a loop.
+It deliberately waits on `planner_server` instead of AMCL: `BasicNavigator`'s
+AMCL wait keeps publishing a default (0, 0) initial pose, which would
+overwrite a pose already set in RViz.
+
+Speed limits are deliberately conservative (0.3 m/s, 1.0 rad/s): the motors
+could do ~1.4 m/s, but AMCL, the 5 Hz local costmap and a WiFi `cmd_vel` link
+are the real limits. Raise them only after it drives reliably.
+
+## 10. Known upstream bug: RViz Map display
 
 RViz2's native `Map` display fails to link its `indexed_8bit_image` palette
 shader on a wide range of GPUs — confirmed as a long-standing, unresolved
@@ -154,7 +204,7 @@ entirely.
 the native `Map` display to work. A real fix would mean rebuilding RViz's
 Ogre-linked libraries from source — out of scope here.
 
-## 10. Open items / PLACEHOLDERs
+## 11. Open items / PLACEHOLDERs
 
 Everything literally marked `PLACEHOLDER` in the code still needs to be
 measured on the physical robot:
@@ -165,6 +215,8 @@ measured on the physical robot:
   `config/robot_params.yaml` **and** `urdf/mecanum_agv.urdf.xacro`
 - PID gains (`KP=2.0, KI=5.0, KD=0.0` are untuned defaults)
 - Chassis dimensions in the URDF (currently a `0.24 × 0.20 × 0.08 m` placeholder)
+- Nav2 `footprint` in `config/nav2_params.yaml` (provisional ~28 × 30 cm incl.
+  wheels) and the waypoint coordinates in `config/waypoints.yaml`
 
 Also still pending:
 - Raspberry Pi connection details (IP/SSH) — with teammates as of last check

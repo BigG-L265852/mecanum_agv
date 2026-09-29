@@ -1,0 +1,119 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Enabled: true
+      Value: true
+    # Native Map display disabled — see slam.rviz / ARCHITECTURE.md §10 (ros2/rviz#1279).
+    # Map and both costmaps are shown as PointCloud2 republished by map_to_pointcloud.
+    - Class: rviz_default_plugins/PointCloud2
+      Name: Map (PointCloud2)
+      Topic:
+        Value: /map_points
+        Durability Policy: Transient Local
+      Style: Flat Squares
+      Size (Pixels): 3
+      Color Transformer: RGB8
+      Enabled: true
+      Value: true
+    - Class: rviz_default_plugins/PointCloud2
+      Name: Global costmap
+      Topic:
+        Value: /global_costmap/costmap_points
+        Durability Policy: Volatile
+      Style: Flat Squares
+      Size (Pixels): 3
+      Color Transformer: RGB8
+      Enabled: true
+      Value: true
+    - Class: rviz_default_plugins/PointCloud2
+      Name: Local costmap
+      Topic:
+        Value: /local_costmap/costmap_points
+        Durability Policy: Volatile
+      Style: Flat Squares
+      Size (Pixels): 3
+      Color Transformer: RGB8
+      Enabled: false
+      Value: false
+    - Class: rviz_default_plugins/LaserScan
+      Name: LaserScan
+      Topic:
+        Value: /scan
+      Size (m): 0.03
+      Color: 255; 0; 0
+      Enabled: true
+      Value: true
+    - Class: rviz_default_plugins/RobotModel
+      Name: RobotModel
+      Description Topic:
+        Value: /robot_description
+      Enabled: true
+      Value: true
+    - Class: rviz_default_plugins/Polygon
+      Name: Footprint
+      Topic:
+        Value: /local_costmap/published_footprint
+      Color: 0; 255; 0
+      Enabled: true
+      Value: true
+    - Class: rviz_default_plugins/Path
+      Name: Global plan
+      Topic:
+        Value: /plan
+      Color: 0; 120; 255
+      Line Width: 0.03
+      Line Style: Billboards
+      Enabled: true
+      Value: true
+    - Class: rviz_default_plugins/MarkerArray
+      Name: MPPI trajectories
+      Topic:
+        Value: /trajectories
+      Enabled: false
+      Value: false
+    - Class: rviz_default_plugins/PoseArray
+      Name: AMCL particles
+      Topic:
+        Value: /particle_cloud
+        Reliability Policy: Best Effort
+      Color: 255; 200; 0
+      Arrow Length: 0.1
+      Enabled: true
+      Value: true
+    - Class: rviz_default_plugins/TF
+      Name: TF
+      Enabled: false
+      Value: false
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: map
+  Tools:
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    # "2D Pose Estimate": tell AMCL where the robot is (needed once after startup).
+    - Class: rviz_default_plugins/SetInitialPose
+      Topic:
+        Value: /initialpose
+    # "2D Goal Pose": bt_navigator listens on /goal_pose and drives there.
+    - Class: rviz_default_plugins/SetGoal
+      Topic:
+        Value: /goal_pose
+  Views:
+    Current:
+      Class: rviz_default_plugins/TopDownOrtho
+      Name: Current View
+      Scale: 100
+      X: 0
+      Y: 0
+Window Geometry:
+  Height: 900
+  Width: 1400
+  X: 60
+  Y: 60

@@ -3,7 +3,7 @@
 <package format="3">
   <name>mecanum_agv</name>
   <version>0.1.0</version>
-  <description>Mecanum-wheel AGV: cmd_vel drive control, encoder odometry, and SLAM bringup (BIC mapping challenge)</description>
+  <description>Mecanum-wheel AGV: cmd_vel drive control, encoder odometry, SLAM and Nav2 autonomous navigation (BIC mapping challenge)</description>
   <maintainer email="gijs.v.lankvelt@gmail.com">big-g</maintainer>
   <license>Apache-2.0</license>
 
@@ -18,6 +18,10 @@
   <exec_depend>nav2_amcl</exec_depend>
   <exec_depend>nav2_map_server</exec_depend>
   <exec_depend>nav2_lifecycle_manager</exec_depend>
+  <!-- Full Nav2 stack (controller/planner/bt_navigator/..., MPPI, collision monitor) -->
+  <exec_depend>navigation2</exec_depend>
+  <exec_depend>nav2_simple_commander</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
   <exec_depend>rplidar_ros</exec_depend>
   <exec_depend>python3-serial</exec_depend>
   <exec_depend>python3-opencv</exec_depend>

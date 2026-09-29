@@ -1,14 +1,21 @@
 # mecanum_agv
 
-ROS 2 Jazzy package for a 4-mecanum-wheel AGV — BIC mapping challenge, Phase 1 (SLAM).
+ROS 2 Jazzy package for a 4-mecanum-wheel AGV — BIC mapping challenge: SLAM, AMCL
+localization and autonomous navigation with Nav2.
 
 Two machines:
 - **Raspberry Pi** (on the robot): runs `bringup.launch.py` — robot_state_publisher, the
   mecanum drive/odom node (talks to the Arduino over serial), and the RPLIDAR.
-- **Dev laptop**: runs `slam.launch.py` — slam_toolbox + RViz. Must share the same
+- **Dev laptop**: runs `slam.launch.py` (slam_toolbox + RViz) or `navigation.launch.py`
+  (AMCL/SLAM + the full Nav2 stack + RViz). Must share the same
   `ROS_DOMAIN_ID` as the Pi so `/scan`, `/odom` and `/tf` are visible over the network.
 
 ## Setup
+
+The dev laptop needs the full Nav2 stack (the Pi doesn't — Nav2 runs on the laptop):
+```
+sudo apt install ros-jazzy-navigation2 ros-jazzy-nav2-bringup
+```
 
 Clone this repo into `~/ros2_ws/src/` on both machines, then on each:
 
@@ -54,11 +61,37 @@ Save the finished map (from the dev laptop, once the area is fully mapped):
 ros2 run nav2_map_server map_saver_cli -f ~/maps/bic_workspace
 ```
 
+## Autonomous navigation (Nav2)
+
+Needs a saved map in `maps/map.yaml` (see `maps/README.md`) and the Pi running `bringup.launch.py`.
+On the dev laptop:
+```
+ros2 launch mecanum_agv navigation.launch.py
+```
+1. In RViz, click **2D Pose Estimate** and drag where the robot actually is/faces
+   (AMCL needs this once; the yellow particle cloud should converge while driving).
+2. Click **2D Goal Pose** anywhere on the map — the robot plans a path (blue) and drives there.
+
+Or drive a fixed route without clicking (edit `config/waypoints.yaml` first):
+```
+ros2 run mecanum_agv waypoint_mission                      # once
+ros2 run mecanum_agv waypoint_mission --ros-args -p loop:=true
+```
+
+Navigate while mapping an unknown room (no saved map needed):
+```
+ros2 launch mecanum_agv navigation.launch.py slam:=true
+```
+
+Tuning lives in `config/nav2_params.yaml` — start with the footprint (PLACEHOLDER) and the
+speed limits (`vx_max`/`vy_max`/`wz_max` in `FollowPath` **and** `velocity_smoother`).
+See ARCHITECTURE.md §9 for the design.
+
 ## Required TF tree
 
 ```
 map -> odom -> base_footprint -> base_link -> laser_frame
 ```
 
-`map -> odom` comes from slam_toolbox, `odom -> base_footprint` from `mecanum_drive_node`
+`map -> odom` comes from slam_toolbox (mapping) or AMCL (localization/navigation), `odom -> base_footprint` from `mecanum_drive_node`
 (encoder odometry), the rest from `robot_state_publisher` + the URDF.

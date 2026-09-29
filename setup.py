@@ -22,7 +22,7 @@ setup(
     zip_safe=True,
     maintainer='big-g',
     maintainer_email='gijs.v.lankvelt@gmail.com',
-    description='Mecanum-wheel AGV drive control, odometry, and SLAM bringup',
+    description='Mecanum-wheel AGV drive control, odometry, SLAM and Nav2 navigation',
     license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
@@ -31,6 +31,7 @@ setup(
             'map_to_png = mecanum_agv.map_to_png:main',
             'map_to_pointcloud = mecanum_agv.map_to_pointcloud:main',
             'map_viewer = mecanum_agv.map_viewer:main',
+            'waypoint_mission = mecanum_agv.waypoint_mission:main',
         ],
     },
 )

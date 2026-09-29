@@ -7,6 +7,10 @@ type refer to the same texture image unit", ros2/rviz#1279) on a wide range
 of GPUs. PointCloud2 uses an unrelated, working shader path (the same one
 LaserScan already renders fine with), so this lets the map be viewed live in
 RViz without touching RViz/Ogre itself.
+
+Parameters let one more instance per Nav2 costmap do the same for
+/global_costmap/costmap and /local_costmap/costmap (mode:=costmap): only
+cells with cost > 0 are published, colored by cost, slightly above the map.
 """
 import struct
 
@@ -19,6 +23,8 @@ from sensor_msgs.msg import PointCloud2, PointField
 
 FREE_RGB = (170, 170, 170)
 OCCUPIED_RGB = (255, 40, 40)
+LETHAL_RGB = (255, 0, 255)      # cost 100: obstacle cell
+INSCRIBED_RGB = (0, 200, 255)   # cost 99: footprint centre here = collision
 
 
 def _rgb_float(r, g, b):
@@ -30,10 +36,25 @@ class MapToPointCloud(Node):
 
     def __init__(self):
         super().__init__('map_to_pointcloud')
-        map_qos = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
-        self.create_subscription(OccupancyGrid, '/map', self._callback, map_qos)
-        self.pub = self.create_publisher(PointCloud2, '/map_points', map_qos)
-        self.get_logger().info('Republishing /map as /map_points (PointCloud2)')
+        self.declare_parameter('input_topic', '/map')
+        self.declare_parameter('output_topic', '/map_points')
+        self.declare_parameter('mode', 'map')  # 'map' or 'costmap'
+        self.declare_parameter('z_offset', 0.0)
+        input_topic = self.get_parameter('input_topic').value
+        output_topic = self.get_parameter('output_topic').value
+        self.mode = self.get_parameter('mode').value
+        self.z_offset = float(self.get_parameter('z_offset').value)
+
+        if self.mode == 'costmap':
+            # Costmaps are republished continuously, so a volatile subscription is
+            # enough (and is QoS-compatible with any publisher durability).
+            qos = QoSProfile(depth=1)
+        else:
+            qos = QoSProfile(depth=1, durability=DurabilityPolicy.TRANSIENT_LOCAL)
+        self.create_subscription(OccupancyGrid, input_topic, self._callback, qos)
+        self.pub = self.create_publisher(PointCloud2, output_topic, qos)
+        self.get_logger().info(
+            f'Republishing {input_topic} as {output_topic} (PointCloud2, mode={self.mode})')
 
     def _callback(self, msg: OccupancyGrid):
         width, height = msg.info.width, msg.info.height
@@ -42,18 +63,25 @@ class MapToPointCloud(Node):
         oy = msg.info.origin.position.y
 
         data = np.array(msg.data, dtype=np.int16).reshape((height, width))
-        rows, cols = np.where(data >= 0)
+        if self.mode == 'costmap':
+            rows, cols = np.where(data > 0)
+        else:
+            rows, cols = np.where(data >= 0)
         if rows.size == 0:
             return
 
         xs = ox + (cols.astype(np.float32) + 0.5) * res
         ys = oy + (rows.astype(np.float32) + 0.5) * res
-        zs = np.zeros_like(xs)
+        zs = np.full_like(xs, self.z_offset)
 
-        occupied = data[rows, cols] >= 50
-        free_rgb = _rgb_float(*FREE_RGB)
-        occ_rgb = _rgb_float(*OCCUPIED_RGB)
-        rgbs = np.where(occupied, occ_rgb, free_rgb).astype(np.float32)
+        values = data[rows, cols]
+        if self.mode == 'costmap':
+            rgbs = self._costmap_colors(values)
+        else:
+            occupied = values >= 50
+            free_rgb = _rgb_float(*FREE_RGB)
+            occ_rgb = _rgb_float(*OCCUPIED_RGB)
+            rgbs = np.where(occupied, occ_rgb, free_rgb).astype(np.float32)
 
         points = np.column_stack((xs, ys, zs, rgbs)).astype(np.float32)
 
@@ -74,6 +102,18 @@ class MapToPointCloud(Node):
         cloud.data = points.tobytes()
 
         self.pub.publish(cloud)
+
+    @staticmethod
+    def _costmap_colors(values):
+        """Inflated cost 1..98 fades yellow -> red; inscribed and lethal get their own color."""
+        t = (values.astype(np.float32) - 1.0) / 97.0
+        r = np.full(values.shape, 255, dtype=np.uint32)
+        g = (220 * (1.0 - np.clip(t, 0.0, 1.0))).astype(np.uint32)
+        b = np.zeros(values.shape, dtype=np.uint32)
+        packed = (r << 16) | (g << 8) | b
+        packed[values == 99] = (INSCRIBED_RGB[0] << 16) | (INSCRIBED_RGB[1] << 8) | INSCRIBED_RGB[2]
+        packed[values >= 100] = (LETHAL_RGB[0] << 16) | (LETHAL_RGB[1] << 8) | LETHAL_RGB[2]
+        return packed.view(np.float32)
 
 
 def main():

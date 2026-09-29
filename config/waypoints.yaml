@@ -1,0 +1,13 @@
+# Route for `ros2 run mecanum_agv waypoint_mission`, in the map frame
+# (x, y in meters, yaw in radians). PLACEHOLDER coordinates: once the room is mapped,
+# read real positions off RViz (hover the map: the status bar shows x/y), or click a
+# "2D Goal Pose" and `ros2 topic echo /goal_pose` to copy the numbers.
+
+# Only used with `-p initial_pose:=true` (where the robot is placed at startup).
+initial_pose: {x: 0.0, y: 0.0, yaw: 0.0}
+
+waypoints:
+  - {x: 1.0, y: 0.0, yaw: 0.0}
+  - {x: 1.0, y: 1.0, yaw: 1.57}
+  - {x: 0.0, y: 1.0, yaw: 3.14}
+  - {x: 0.0, y: 0.0, yaw: 0.0}
