@@ -44,9 +44,11 @@ opstart af. Sta je ergens anders, zet de positie dan met **2D Pose Estimate** in
 
 Drie terminals op de laptop, elk met `source ~/ros2_ws/install/setup.bash`.
 
-**Terminal 1** — LiDAR + nep-odom-transform:
+**Terminal 1** — LiDAR + nep-odom-transform. Kijk eerst op welke poort de LiDAR zit
+(na opnieuw insteken kan `ttyUSB0` ineens `ttyUSB1` zijn):
 ```bash
-ros2 launch mecanum_agv lidar_test_bringup.launch.py
+ls /dev/ttyUSB*
+ros2 launch mecanum_agv lidar_test_bringup.launch.py lidar_port:=/dev/ttyUSB0
 ```
 
 **Terminal 2** — SLAM met het odom-vrije profiel:
@@ -103,8 +105,8 @@ Dit start AMCL tegen `maps/map.yaml` plus de hele Nav2-stack. Wat je kunt testen
 
 **Verwacht, geen bug:** omdat de nep-odometrie nooit beweegt, komt de robot
 niet vooruit. Na ~10 s zonder voortgang breekt de progress checker het doel af,
-probeert Nav2 recovery-gedrag (draaien, achteruit) en meldt het doel uiteindelijk
-als mislukt.
+probeert Nav2 een paar rondes recovery-gedrag (draaien, achteruit, wachten) en meldt
+het doel na een minuut of twee als mislukt. Een nieuwe klik start opnieuw.
 
 ## Zodra de robot af is
 

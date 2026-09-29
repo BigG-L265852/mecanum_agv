@@ -44,6 +44,10 @@ def generate_launch_description():
     params_arg = DeclareLaunchArgument(
         'params_file', default_value=default_params_path,
         description='Full path to the Nav2 parameters yaml')
+    slam_params_arg = DeclareLaunchArgument(
+        'slam_params_file', default_value=slam_params_path,
+        description='slam_toolbox parameters for slam:=true '
+                    '(mapper_params_no_odom_test.yaml for a LiDAR-only test)')
     open_rviz_arg = DeclareLaunchArgument(
         'open_rviz', default_value='true', description='Launch RViz with the navigation config')
 
@@ -64,7 +68,10 @@ def generate_launch_description():
     )
     slam_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(pkg_share, 'launch', 'slam.launch.py')),
-        launch_arguments={'params_file': slam_params_path, 'open_rviz': 'false'}.items(),
+        launch_arguments={
+            'params_file': LaunchConfiguration('slam_params_file'),
+            'open_rviz': 'false',
+        }.items(),
     )
     localization_group = GroupAction(
         [localization_launch], scoped=True, condition=UnlessCondition(slam))
@@ -136,6 +143,7 @@ def generate_launch_description():
         slam_arg,
         map_arg,
         params_arg,
+        slam_params_arg,
         open_rviz_arg,
         localization_group,
         slam_group,
