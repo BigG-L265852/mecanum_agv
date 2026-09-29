@@ -35,9 +35,10 @@ niet het standaard differential-drive model — mecanum wheels kunnen strafen/
 draaien onafhankelijk van de rijrichting, en het differential-model zou de
 particle cloud verkeerd verspreiden bij zijwaartse beweging.
 
-`set_initial_pose: false` en `first_map_only: false` staan aan zodat AMCL
-**global localization** doet: de robot mag overal op de kaart neergezet
-worden, AMCL moet zelf uitvinden waar.
+`set_initial_pose: true` met `initial_pose` op (0, 0, 0): AMCL begint op de
+oorsprong van de kaart, dat is de plek waar je begon met mappen. Zonder
+startpositie publiceert AMCL geen `map → odom` en breekt Nav2 na 60 s de
+opstart af. Sta je ergens anders, zet de positie dan met **2D Pose Estimate** in RViz.
 
 ## Stap 1 — map bouwen (SLAM, zonder odom)
 
@@ -74,17 +75,41 @@ door:
 ```bash
 ros2 launch mecanum_agv localization.launch.py
 ```
-Check in RViz of `/particlecloud` samenklontert rond je werkelijke positie.
+Check in RViz of `/particle_cloud` samenklontert rond je werkelijke positie.
 
 **Let op:** omdat de odom-transform nep/statisch is, test dit alleen of AMCL
 correct opstart, de map laadt, en op basis van losse scans convergeert — niet
 of het écht beweging tussen updates volgt. Voor die validatie is de
 wielodometrie (Arduino) nodig.
 
+## Stap 3 — Nav2 testen (robot rijdt nog niet)
+
+Terminal 1 (`lidar_test_bringup.launch.py`) blijft draaien. Vervang terminal 2 door:
+```bash
+ros2 launch mecanum_agv navigation.launch.py
+```
+Dit start AMCL tegen `maps/map.yaml` plus de hele Nav2-stack. Wat je kunt testen:
+
+- **Costmaps met echte obstakels:** loop rond de LiDAR. In de *Local costmap*
+  (in RViz aanzetten) verschijn je live, de *Global costmap* laat de muren zien
+  met een opgeblazen rand (geel → rood).
+- **Plannen:** klik met **2D Goal Pose** op de kaart. Er moet een blauwe route
+  verschijnen die om obstakels heen loopt.
+- **Rijcommando's:** in een extra terminal `ros2 topic echo /cmd_vel`. Na een
+  klik zie je wat de robot *zou* doen (`linear.y` ≠ 0 = zijwaarts).
+- **Noodrem (collision monitor):** houd een doos of je hand vlak bij de LiDAR aan
+  de kant waar hij heen wil. `/cmd_vel` moet dan naar 0 gaan
+  (`ros2 topic echo /collision_monitor_state`).
+
+**Verwacht, geen bug:** omdat de nep-odometrie nooit beweegt, komt de robot
+niet vooruit. Na ~10 s zonder voortgang breekt de progress checker het doel af,
+probeert Nav2 recovery-gedrag (draaien, achteruit) en meldt het doel uiteindelijk
+als mislukt.
+
 ## Zodra de robot af is
 
 Vervang `lidar_test_bringup.launch.py` door het normale tweetraps-model:
 - Pi: `ros2 launch mecanum_agv bringup.launch.py`
 - Laptop: `ros2 launch mecanum_agv slam.launch.py` (map bouwen) of
-  `ros2 launch mecanum_agv localization.launch.py` (tegen opgeslagen map),
+  `ros2 launch mecanum_agv navigation.launch.py` (lokaliseren + autonoom rijden),
   beide met `ROS_DOMAIN_ID` gelijk aan de Pi.
