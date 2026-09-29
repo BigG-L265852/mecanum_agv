@@ -18,8 +18,12 @@ amcl:
     scan_topic: /scan
     map_topic: /map
 
-    # Global localization: robot may be placed anywhere on the map at startup.
-    set_initial_pose: false
+    # Start at the map origin = where the robot stood when mapping began. Nav2's AMCL
+    # publishes no map->odom at all until it has a pose, and navigation.launch.py's
+    # costmaps give up after 60 s without that transform, aborting the whole Nav2
+    # bringup. Placed elsewhere? Correct it with "2D Pose Estimate" in RViz.
+    set_initial_pose: true
+    initial_pose: {x: 0.0, y: 0.0, z: 0.0, yaw: 0.0}
     first_map_only: false
     always_reset_initial_pose: false
     min_particles: 500

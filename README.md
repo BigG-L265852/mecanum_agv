@@ -68,8 +68,9 @@ On the dev laptop:
 ```
 ros2 launch mecanum_agv navigation.launch.py
 ```
-1. In RViz, click **2D Pose Estimate** and drag where the robot actually is/faces
-   (AMCL needs this once; the yellow particle cloud should converge while driving).
+1. AMCL assumes the robot starts at the map origin (where mapping started). If it's
+   somewhere else, click **2D Pose Estimate** in RViz and drag where it actually is/faces
+   (the yellow particle cloud should converge while driving).
 2. Click **2D Goal Pose** anywhere on the map — the robot plans a path (blue) and drives there.
 
 Or drive a fixed route without clicking (edit `config/waypoints.yaml` first):
