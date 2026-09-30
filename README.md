@@ -26,22 +26,27 @@ Rebuild after every change to a launch/config/map file: they're *copied* into
 `install/`. (Don't switch to `--symlink-install` in an existing workspace — colcon then
 fails with `File exists`; delete `build/mecanum_agv` and `install/mecanum_agv` first.)
 
-Both machines need the same `ROS_DOMAIN_ID` in `~/.bashrc` (the laptop uses `1`),
-otherwise the laptop never sees the Pi's `/scan`, `/odom` and `/tf`:
+Add these lines to the end of `~/.bashrc` on **both** the laptop and the Pi (once),
+so every new terminal has ROS, the same `ROS_DOMAIN_ID` (otherwise the laptop never sees
+the Pi's `/scan`, `/odom` and `/tf`) and this workspace loaded:
 ```
+source /opt/ros/jazzy/setup.bash
 export ROS_DOMAIN_ID=1
+source ~/ros2_ws/install/setup.bash
 ```
+Each `source` line only once — check with `grep -n setup.bash ~/.bashrc`. Run
+`source ~/.bashrc` (or open a new terminal) afterwards.
 
 Arduino: open `arduino_firmware/mecanum_agv_firmware/mecanum_agv_firmware.ino` in the
 Arduino IDE, board *Arduino Mega 2560*, and upload (after checking the PLACEHOLDER pins).
 
 ## Every new terminal
 
+Nothing to do if you did the `~/.bashrc` step above. If `ros2 launch` says
+`Package 'mecanum_agv' not found`, the workspace isn't sourced:
 ```
 source ~/ros2_ws/install/setup.bash
 ```
-(`~/.bashrc` only sources ROS itself, not this workspace. Add the line to `~/.bashrc`
-to skip this step.)
 
 ## Before it will actually work
 
