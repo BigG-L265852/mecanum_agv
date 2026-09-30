@@ -146,6 +146,17 @@ ros2 run tf2_ros tf2_echo map base_footprint   # where the robot thinks it is
 ros2 run mecanum_agv map_to_png ~/map.png      # current /map as a PNG, outside RViz
 ```
 
+**RViz empty / `Global Status: Error` / `ros2 topic hz /scan` shows nothing?** Look at the
+LiDAR terminal. If it shows
+```
+[rplidar_composition]: Start
+[ERROR] [rplidar_composition]: Cannot start scan: '80008000'
+[ERROR] [rplidar_composition]: Failed to set scan mode
+```
+or stops after `Start` without errors while `/scan` stays silent, the LiDAR itself is stuck
+(it still reports health `0`). Not a code or port problem: Ctrl+C the launch, unplug the
+LiDAR's USB, wait ~10 s, plug it back in (same port is fine) and start again.
+
 ## Required TF tree
 
 ```
