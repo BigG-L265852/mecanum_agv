@@ -93,11 +93,42 @@ ros2 launch mecanum_agv navigation.launch.py
 2. Click **2D Goal Pose** anywhere on the map — the robot plans a path (blue) and drives there.
    A new click replaces the current goal.
 
-Or drive a fixed route without clicking (edit `config/waypoints.yaml` first, then rebuild),
-in a second laptop terminal while `navigation.launch.py` runs:
+Or drive a fixed route without clicking, in a second laptop terminal while
+`navigation.launch.py` runs:
 ```
 ros2 run mecanum_agv waypoint_mission                      # once
 ros2 run mecanum_agv waypoint_mission --ros-args -p loop:=true
+```
+
+#### Waypoints
+The route is in `config/waypoints.yaml`. Waypoints are driven top to bottom:
+```yaml
+waypoints:
+  - {x: 1.0, y: 0.0, yaw: 0.0}
+  - {x: 1.0, y: 1.0, yaw: 1.57}
+  - {x: 0.0, y: 1.0, yaw: 3.14}
+  - {x: 0.0, y: 0.0, yaw: 0.0}
+```
+- `x`, `y`: meters in the `map` frame. `(0, 0)` is where mapping started; +x is the
+  direction the LiDAR faced at that moment, +y is to its left. **Negative values are fine**
+  (behind / to the right of the start point).
+- `yaw`: which way the robot faces when it arrives, in radians. 0 = +x, 1.57 = +y (90° left),
+  3.14 or -3.14 = facing back, -1.57 = 90° right. Optional, defaults to 0.
+- **No fixed maximum** in the code — but a waypoint must lie on the map, in free (gray)
+  space, and not too close to a wall (the costmap inflation), otherwise the planner fails
+  and the route stops with `Route failed`. The map's bounds follow from `maps/map.yaml`:
+  x runs from `origin[0]` to `origin[0] + width × resolution` (same for y with height;
+  width/height are in the second line of `map.pgm`, e.g. `head -c 20 maps/map.pgm`).
+- To find real coordinates: hover the map in RViz (the status bar shows x/y), or click a
+  **2D Goal Pose** while `ros2 topic echo /goal_pose` runs and copy the numbers.
+- `initial_pose` in the same file is only used with `-p initial_pose:=true` (sets where
+  the robot stands at startup instead of clicking **2D Pose Estimate**).
+
+The script reads the installed copy, so rebuild after editing
+(`cd ~/ros2_ws && colcon build --packages-select mecanum_agv`), or skip the rebuild by
+pointing at the source file:
+```
+ros2 run mecanum_agv waypoint_mission --ros-args -p waypoints_file:=$HOME/ros2_ws/src/mecanum_agv/config/waypoints.yaml
 ```
 
 Navigate while mapping an unknown room instead (no saved map needed; replaces step 2):
