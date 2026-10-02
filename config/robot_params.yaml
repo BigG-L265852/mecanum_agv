@@ -2,8 +2,8 @@ mecanum_drive_node:
   ros__parameters:
     # Must match urdf/mecanum_agv.urdf.xacro wheel_radius / wheel_separation_x / wheel_separation_y
     wheel_radius: 0.04        # 80 mm mecanum wheels
-    wheel_separation_x: 0.10
-    wheel_separation_y: 0.10
+    wheel_separation_x: 0.087   # half of the measured ~17.4 cm wheelbase
+    wheel_separation_y: 0.128   # half of the ~25.6 cm track width (wheel centre to wheel centre)
     serial_port: /dev/ttyUSB0
     baud_rate: 115200
     odom_frame: odom

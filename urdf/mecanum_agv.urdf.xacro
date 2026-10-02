@@ -1,15 +1,15 @@
 <?xml version="1.0"?>
 <robot name="mecanum_agv" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <!-- Placeholder dimensions (meters) — measure the real chassis and update these,
-       and keep wheel_radius/wheel_separation_x/y in sync with config/robot_params.yaml -->
-  <xacro:property name="chassis_length" value="0.24"/>
-  <xacro:property name="chassis_width" value="0.20"/>
+  <!-- Measured dimensions (meters) of the real chassis —
+       keep wheel_radius/wheel_separation_x/y in sync with config/robot_params.yaml -->
+  <xacro:property name="chassis_length" value="0.21"/>  <!-- measured plate: 21 x 21 cm -->
+  <xacro:property name="chassis_width" value="0.21"/>
   <xacro:property name="chassis_height" value="0.08"/>
   <xacro:property name="wheel_radius" value="0.04"/>
   <xacro:property name="wheel_width" value="0.037"/>
-  <xacro:property name="wheel_separation_x" value="0.10"/>  <!-- lx: half wheelbase -->
-  <xacro:property name="wheel_separation_y" value="0.10"/>  <!-- ly: half track width -->
+  <xacro:property name="wheel_separation_x" value="0.087"/>  <!-- lx: half wheelbase, measured just under 17.5 cm axle to axle -->
+  <xacro:property name="wheel_separation_y" value="0.128"/>  <!-- ly: half track, (18.74 cm bracket-to-bracket + 2*(1.6 gap + 3.7/2 wheel)) / 2 -->
   <xacro:property name="lidar_offset_x" value="0.0"/>
   <xacro:property name="lidar_offset_z" value="0.10"/>       <!-- height of lidar above base_link -->
 
